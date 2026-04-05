@@ -1,0 +1,42 @@
+.companies-toolbar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  align-items: center;
+}
+
+.companies-toolbar .search-box {
+  flex: 1;
+}
+
+.companies-table-wrap {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.companies-table-wrap tr {
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.companies-table-wrap tr:hover td {
+  background: var(--bg-hover);
+}
+
+.ticker-cell {
+  font-weight: 600;
+  color: var(--accent-light);
+  font-family: monospace;
+  font-size: 13px;
+}
+
+.de-ratio {
+  font-family: monospace;
+  font-size: 13px;
+}
+
+.de-high { color: var(--danger); }
+.de-medium { color: var(--warning); }
+.de-low { color: var(--success); }

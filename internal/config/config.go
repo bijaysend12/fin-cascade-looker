@@ -1,0 +1,44 @@
+package config
+
+import (
+	"os"
+	"path/filepath"
+	"runtime"
+
+	"github.com/joho/godotenv"
+)
+
+type Config struct {
+	Neo4jURI      string
+	Neo4jUser     string
+	Neo4jPassword string
+	SQLitePath    string
+	Port          string
+	ProjectDir    string
+}
+
+func Load() *Config {
+	projectDir := os.Getenv("FIN_CASCADE_LOOKER_DIR")
+	if projectDir == "" {
+		_, file, _, _ := runtime.Caller(0)
+		projectDir = filepath.Dir(filepath.Dir(filepath.Dir(file)))
+	}
+
+	_ = godotenv.Load(filepath.Join(projectDir, ".env"))
+
+	return &Config{
+		Neo4jURI:      getEnv("NEO4J_URI", "bolt://localhost:7687"),
+		Neo4jUser:     getEnv("NEO4J_USER", "neo4j"),
+		Neo4jPassword: getEnv("NEO4J_PASSWORD", "fincascade123"),
+		SQLitePath:    getEnv("SQLITE_PATH", "/home/kanshi/project/fin-cascade/data/news.db"),
+		Port:          getEnv("PORT", "8080"),
+		ProjectDir:    projectDir,
+	}
+}
+
+func getEnv(key, fallback string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return fallback
+}
