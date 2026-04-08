@@ -93,6 +93,10 @@ func (h *Handler) GetNewsStats(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) ListScans(w http.ResponseWriter, r *http.Request) {
+	if !isAdmin(r) {
+		writeError(w, 403, "admin access required")
+		return
+	}
 	if h.SQLite == nil {
 		writeJSON(w, []any{})
 		return

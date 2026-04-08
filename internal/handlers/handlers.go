@@ -8,6 +8,10 @@ import (
 	"github.com/coachengo/fin-cascade-looker/internal/db"
 )
 
+type contextKey string
+
+const UserContextKey contextKey = "user"
+
 type Handler struct {
 	Neo4j  *db.Neo4jClient
 	SQLite *db.SQLiteClient
@@ -16,6 +20,11 @@ type Handler struct {
 
 func New(n *db.Neo4jClient, s *db.SQLiteClient, pg *db.PGClient) *Handler {
 	return &Handler{Neo4j: n, SQLite: s, PG: pg}
+}
+
+func isAdmin(r *http.Request) bool {
+	u, ok := r.Context().Value(UserContextKey).(*db.User)
+	return ok && u != nil && u.IsAdmin
 }
 
 func writeJSON(w http.ResponseWriter, data any) {

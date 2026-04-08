@@ -6,6 +6,10 @@ import (
 )
 
 func (h *Handler) ListCompanies(w http.ResponseWriter, r *http.Request) {
+	if !isAdmin(r) {
+		writeError(w, 403, "admin access required")
+		return
+	}
 	search := queryStr(r, "search")
 	sector := queryStr(r, "sector")
 	cap := queryStr(r, "cap")
@@ -56,6 +60,10 @@ func (h *Handler) ListCompanies(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetCompany(w http.ResponseWriter, r *http.Request) {
+	if !isAdmin(r) {
+		writeError(w, 403, "admin access required")
+		return
+	}
 	ticker := r.PathValue("ticker")
 	if ticker == "" {
 		writeError(w, 400, "ticker required")
@@ -134,6 +142,10 @@ func (h *Handler) GetCompany(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetCompanyGraph(w http.ResponseWriter, r *http.Request) {
+	if !isAdmin(r) {
+		writeError(w, 403, "admin access required")
+		return
+	}
 	ticker := r.PathValue("ticker")
 	if ticker == "" {
 		writeError(w, 400, "ticker required")

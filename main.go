@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/fs"
@@ -9,16 +10,25 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/coachengo/fin-cascade-looker/internal/auth"
 	"github.com/coachengo/fin-cascade-looker/internal/config"
 	"github.com/coachengo/fin-cascade-looker/internal/db"
 	"github.com/coachengo/fin-cascade-looker/internal/handlers"
 )
 
+
 func main() {
 	cfg := config.Load()
 
-	if cfg.ServerKey == "" {
-		fmt.Fprintf(os.Stderr, "WARNING: SERVER_KEY not set — API is unprotected\n")
+	var allowedEmails []string
+	if cfg.AllowedEmails != "" {
+		allowedEmails = strings.Split(cfg.AllowedEmails, ",")
+	}
+	firebaseAuth := auth.NewFirebaseVerifier(cfg.FirebaseProjectID, allowedEmails)
+	if len(allowedEmails) > 0 {
+		fmt.Fprintf(os.Stderr, "Firebase auth enabled, allowed emails: %s\n", cfg.AllowedEmails)
+	} else {
+		fmt.Fprintf(os.Stderr, "Firebase auth enabled (all authenticated users allowed)\n")
 	}
 
 	neo4j, err := db.NewNeo4jClient(cfg.Neo4jURI, cfg.Neo4jUser, cfg.Neo4jPassword)
@@ -50,6 +60,22 @@ func main() {
 	h := handlers.New(neo4j, sqlite, pg)
 
 	mux := http.NewServeMux()
+
+	mux.HandleFunc("GET /api/me", func(w http.ResponseWriter, r *http.Request) {
+		u := UserFromContext(r.Context())
+		if u == nil {
+			writeError(w, 401, "unauthorized")
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]any{
+			"id":       u.ID,
+			"email":    u.Email,
+			"name":     u.Name,
+			"avatar":   u.AvatarURL,
+			"is_admin": u.IsAdmin,
+		})
+	})
 
 	mux.HandleFunc("GET /api/stats", h.GetStats)
 	mux.HandleFunc("GET /api/companies", h.ListCompanies)
@@ -84,7 +110,7 @@ func main() {
 		})
 	}
 
-	handler := corsMiddleware(cfg.CORSOrigin, authMiddleware(cfg.ServerKey, mux))
+	handler := corsMiddleware(cfg.CORSOrigin, firebaseAuthMiddleware(firebaseAuth, pg, mux))
 
 	addr := "127.0.0.1:" + cfg.Port
 	fmt.Fprintf(os.Stderr, "Server listening on http://%s\n", addr)
@@ -94,34 +120,57 @@ func main() {
 	}
 }
 
-func authMiddleware(serverKey string, next http.Handler) http.Handler {
+func firebaseAuthMiddleware(verifier *auth.FirebaseVerifier, pg *db.PGClient, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !strings.HasPrefix(r.URL.Path, "/api/") {
 			next.ServeHTTP(w, r)
 			return
 		}
 
-		if serverKey == "" {
-			next.ServeHTTP(w, r)
-			return
-		}
-
 		token := r.Header.Get("Authorization")
-		if strings.HasPrefix(token, "Bearer ") {
-			token = token[7:]
-		} else {
-			token = r.Header.Get("X-Server-Key")
-		}
-
-		if token != serverKey {
+		if !strings.HasPrefix(token, "Bearer ") {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(401)
 			json.NewEncoder(w).Encode(map[string]string{"error": "unauthorized"})
 			return
 		}
+		token = token[7:]
+
+		claims, err := verifier.VerifyToken(token)
+		if err != nil {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(401)
+			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+			return
+		}
+
+		if pg != nil {
+			name := claims.Name
+			if name == "" {
+				name = claims.Email
+			}
+			user, err := pg.UpsertUser(claims.Subject, claims.Email, name, claims.Picture)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "user upsert failed for %s: %s\n", claims.Email, err)
+			} else {
+				ctx := context.WithValue(r.Context(), handlers.UserContextKey, user)
+				r = r.WithContext(ctx)
+			}
+		}
 
 		next.ServeHTTP(w, r)
 	})
+}
+
+func UserFromContext(ctx context.Context) *db.User {
+	u, _ := ctx.Value(handlers.UserContextKey).(*db.User)
+	return u
+}
+
+func writeError(w http.ResponseWriter, status int, msg string) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	json.NewEncoder(w).Encode(map[string]string{"error": msg})
 }
 
 func corsMiddleware(origin string, next http.Handler) http.Handler {

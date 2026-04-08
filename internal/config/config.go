@@ -7,15 +7,17 @@ import (
 )
 
 type Config struct {
-	Neo4jURI      string
-	Neo4jUser     string
-	Neo4jPassword string
-	SQLitePath    string
-	PostgresDSN   string
-	Port          string
-	ProjectDir    string
-	ServerKey     string
-	CORSOrigin    string
+	Neo4jURI          string
+	Neo4jUser         string
+	Neo4jPassword     string
+	SQLitePath        string
+	PostgresDSN       string
+	Port              string
+	ProjectDir        string
+	ServerKey         string
+	CORSOrigin        string
+	FirebaseProjectID string
+	AllowedEmails     string
 }
 
 func Load() *Config {
@@ -37,8 +39,10 @@ func Load() *Config {
 		PostgresDSN:   getEnv("POSTGRES_DSN", "postgres://fincascade:fincascade123@localhost:5432/fincascade?sslmode=disable"),
 		Port:          getEnv("PORT", "8080"),
 		ProjectDir:    projectDir,
-		ServerKey:     getEnv("SERVER_KEY", ""),
-		CORSOrigin:    getEnv("CORS_ORIGIN", "http://localhost:5173"),
+		ServerKey:         getEnv("SERVER_KEY", ""),
+		CORSOrigin:        getEnv("CORS_ORIGIN", "http://localhost:5173"),
+		FirebaseProjectID: getEnv("FIREBASE_PROJECT_ID", "fin-cascade"),
+		AllowedEmails:     getEnv("ALLOWED_EMAILS", ""),
 	}
 }
 

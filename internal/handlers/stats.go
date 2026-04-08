@@ -3,6 +3,10 @@ package handlers
 import "net/http"
 
 func (h *Handler) GetStats(w http.ResponseWriter, r *http.Request) {
+	if !isAdmin(r) {
+		writeError(w, 403, "admin access required")
+		return
+	}
 	neo4jStats, err := h.Neo4j.Query(`
 		MATCH (c:Company) WITH count(c) as companies
 		MATCH (p:Plant) WITH companies, count(p) as plants
