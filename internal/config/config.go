@@ -3,8 +3,6 @@ package config
 import (
 	"os"
 	"path/filepath"
-	"runtime"
-
 	"github.com/joho/godotenv"
 )
 
@@ -23,8 +21,10 @@ type Config struct {
 func Load() *Config {
 	projectDir := os.Getenv("FIN_CASCADE_LOOKER_DIR")
 	if projectDir == "" {
-		_, file, _, _ := runtime.Caller(0)
-		projectDir = filepath.Dir(filepath.Dir(filepath.Dir(file)))
+		exe, err := os.Executable()
+		if err == nil {
+			projectDir = filepath.Dir(filepath.Dir(exe))
+		}
 	}
 
 	_ = godotenv.Load(filepath.Join(projectDir, ".env"))
