@@ -36,7 +36,7 @@ func (h *Handler) ListNews(w http.ResponseWriter, r *http.Request) {
 
 	rows, err := h.SQLite.DB.Query(query, args...)
 	if err != nil {
-		writeError(w, 500, err.Error())
+		writeError(w, 500, "internal error")
 		return
 	}
 	defer rows.Close()

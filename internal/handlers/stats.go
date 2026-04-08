@@ -14,7 +14,7 @@ func (h *Handler) GetStats(w http.ResponseWriter, r *http.Request) {
 		MATCH ()-[r3:CONSUMES]->() WITH companies, plants, sectors, locations, materials, competes, supplies, count(r3) as consumes
 		RETURN companies, plants, sectors, locations, materials, competes, supplies, consumes`, nil)
 	if err != nil {
-		writeError(w, 500, "Neo4j query failed: "+err.Error())
+		writeError(w, 500, "internal error")
 		return
 	}
 

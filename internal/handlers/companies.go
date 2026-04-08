@@ -23,7 +23,7 @@ func (h *Handler) ListCompanies(w http.ResponseWriter, r *http.Request) {
 
 	countResult, err := h.Neo4j.Query(countQuery, params)
 	if err != nil {
-		writeError(w, 500, err.Error())
+		writeError(w, 500, "internal error")
 		return
 	}
 	total := 0
@@ -45,7 +45,7 @@ func (h *Handler) ListCompanies(w http.ResponseWriter, r *http.Request) {
 
 	records, err := h.Neo4j.Query(listQuery, params)
 	if err != nil {
-		writeError(w, 500, err.Error())
+		writeError(w, 500, "internal error")
 		return
 	}
 	if records == nil {
@@ -69,7 +69,7 @@ func (h *Handler) GetCompany(w http.ResponseWriter, r *http.Request) {
 		c.industry as industry, c.hqCity as hqCity, c.hqState as hqState, c.debtToEquity as debtToEquity,
 		c.exportPct as exportPct, c.marketCapCategory as marketCapCategory, c.description as description`, params)
 	if err != nil {
-		writeError(w, 500, err.Error())
+		writeError(w, 500, "internal error")
 		return
 	}
 	if len(companyRows) == 0 {

@@ -13,8 +13,11 @@ type Config struct {
 	Neo4jUser     string
 	Neo4jPassword string
 	SQLitePath    string
+	PostgresDSN   string
 	Port          string
 	ProjectDir    string
+	ServerKey     string
+	CORSOrigin    string
 }
 
 func Load() *Config {
@@ -31,8 +34,11 @@ func Load() *Config {
 		Neo4jUser:     getEnv("NEO4J_USER", "neo4j"),
 		Neo4jPassword: getEnv("NEO4J_PASSWORD", "fincascade123"),
 		SQLitePath:    getEnv("SQLITE_PATH", "/home/kanshi/project/fin-cascade/data/news.db"),
+		PostgresDSN:   getEnv("POSTGRES_DSN", "postgres://fincascade:fincascade123@localhost:5432/fincascade?sslmode=disable"),
 		Port:          getEnv("PORT", "8080"),
 		ProjectDir:    projectDir,
+		ServerKey:     getEnv("SERVER_KEY", ""),
+		CORSOrigin:    getEnv("CORS_ORIGIN", "http://localhost:5173"),
 	}
 }
 

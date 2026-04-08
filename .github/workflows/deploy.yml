@@ -1,0 +1,115 @@
+name: Deploy Fin Cascade Looker
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Build frontend
+        run: cd frontend && npm ci && npm run build
+        env:
+          VITE_SERVER_KEY: ${{ secrets.SERVER_KEY }}
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+          cache: true
+
+      - name: Get version
+        id: version
+        run: echo "version=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Tidy modules
+        run: go mod tidy
+
+      - name: Build backend
+        run: |
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
+            -ldflags="-s -w -X main.Version=${{ steps.version.outputs.version }}" \
+            -o looker \
+            .
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: fin-cascade-looker-artifacts
+          path: |
+            looker
+            frontend/dist/
+          retention-days: 1
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: fin-cascade-looker-artifacts
+          path: artifacts/
+
+      - name: Deploy to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.STT_HOST }}
+          username: ${{ secrets.STT_USERNAME }}
+          key: ${{ secrets.STT_SSH_KEY }}
+          port: ${{ secrets.STT_PORT }}
+          source: "artifacts/*"
+          target: /tmp/looker-deploy/
+          strip_components: 0
+
+      - name: Deploy and restart service
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.STT_HOST }}
+          username: ${{ secrets.STT_USERNAME }}
+          key: ${{ secrets.STT_SSH_KEY }}
+          port: ${{ secrets.STT_PORT }}
+          script: |
+            set -e
+
+            BASE_DIR="$HOME/project/fin-cascade-looker"
+            BIN_DIR="$BASE_DIR/bin"
+
+            echo "=== Stopping service ==="
+            sudo systemctl stop fin-cascade-looker || true
+
+            echo "=== Backing up old binary ==="
+            [ -f "$BIN_DIR/looker" ] && cp $BIN_DIR/looker $BIN_DIR/looker.backup || true
+
+            echo "=== Moving new binary ==="
+            mv /tmp/looker-deploy/artifacts/looker $BIN_DIR/looker
+            chmod +x $BIN_DIR/looker
+
+            echo "=== Deploying frontend ==="
+            rm -rf $BASE_DIR/frontend/dist
+            mv /tmp/looker-deploy/artifacts/frontend/dist $BASE_DIR/frontend/dist
+
+            echo "=== Starting service ==="
+            sudo systemctl start fin-cascade-looker
+
+            echo "=== Checking service status ==="
+            sleep 3
+            sudo systemctl status fin-cascade-looker --no-pager || true
+
+            echo "=== Cleanup ==="
+            rm -rf /tmp/looker-deploy
+
+            echo "=== Deployment completed! Version: ${{ needs.build.outputs.version }} ==="

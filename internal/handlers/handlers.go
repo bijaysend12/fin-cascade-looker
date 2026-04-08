@@ -11,10 +11,11 @@ import (
 type Handler struct {
 	Neo4j  *db.Neo4jClient
 	SQLite *db.SQLiteClient
+	PG     *db.PGClient
 }
 
-func New(n *db.Neo4jClient, s *db.SQLiteClient) *Handler {
-	return &Handler{Neo4j: n, SQLite: s}
+func New(n *db.Neo4jClient, s *db.SQLiteClient, pg *db.PGClient) *Handler {
+	return &Handler{Neo4j: n, SQLite: s, PG: pg}
 }
 
 func writeJSON(w http.ResponseWriter, data any) {
@@ -35,6 +36,12 @@ func queryInt(r *http.Request, key string, fallback int) int {
 	}
 	n, err := strconv.Atoi(v)
 	if err != nil {
+		return fallback
+	}
+	if key == "limit" && n > 100 {
+		return 100
+	}
+	if n < 0 {
 		return fallback
 	}
 	return n
