@@ -1,11 +1,12 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, Building2, Newspaper } from 'lucide-react'
+import { LayoutDashboard, Building2, Newspaper, Activity } from 'lucide-react'
 import '../styles/sidebar.css'
 
 const links = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/companies', icon: Building2, label: 'Companies' },
   { to: '/news', icon: Newspaper, label: 'News Feed' },
+  { to: '/analysis', icon: Activity, label: 'Analysis' },
 ]
 
 export default function Sidebar() {

@@ -1,12 +1,16 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { api } from '../services/api'
 import StatsCard from '../components/StatsCard'
 import '../styles/dashboard.css'
+import '../styles/analysis.css'
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null)
   const [sectors, setSectors] = useState([])
   const [recentNews, setRecentNews] = useState([])
+  const [recentSignals, setRecentSignals] = useState([])
+  const [analysisStats, setAnalysisStats] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -14,10 +18,14 @@ export default function Dashboard() {
       api.getStats(),
       api.getSectors(),
       api.getNews({ limit: 5 }),
-    ]).then(([s, sec, news]) => {
+      api.getSignals({ limit: 8 }).catch(() => ({ signals: [] })),
+      api.getAnalysisStats().catch(() => null),
+    ]).then(([s, sec, news, sig, as]) => {
       setStats(s)
       setSectors(sec)
       setRecentNews(news.articles || [])
+      setRecentSignals(sig.signals || [])
+      setAnalysisStats(as)
     }).finally(() => setLoading(false))
   }, [])
 
@@ -86,6 +94,64 @@ export default function Dashboard() {
           )}
         </div>
       </div>
+
+      {(recentSignals.length > 0 || analysisStats) && (
+        <>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 32 }}>
+            <h2 className="section-title" style={{ margin: 0 }}>Cascade Analysis</h2>
+            <Link to="/analysis" style={{ fontSize: 13, color: 'var(--accent)', textDecoration: 'none' }}>View all</Link>
+          </div>
+
+          {analysisStats && (
+            <div className="analysis-stats" style={{ marginTop: 12 }}>
+              <div className="analysis-stat">
+                <div className="analysis-stat-value">{analysisStats.total_scans}</div>
+                <div className="analysis-stat-label">Scans</div>
+              </div>
+              <div className="analysis-stat">
+                <div className="analysis-stat-value">{analysisStats.total_events}</div>
+                <div className="analysis-stat-label">Events</div>
+              </div>
+              <div className="analysis-stat">
+                <div className="analysis-stat-value signal-buy">{analysisStats.by_signal?.BUY || 0}</div>
+                <div className="analysis-stat-label">BUY</div>
+              </div>
+              <div className="analysis-stat">
+                <div className="analysis-stat-value signal-sell">{analysisStats.by_signal?.SELL || 0}</div>
+                <div className="analysis-stat-label">SELL</div>
+              </div>
+              <div className="analysis-stat">
+                <div className="analysis-stat-value signal-watch">{analysisStats.by_signal?.WATCH || 0}</div>
+                <div className="analysis-stat-label">WATCH</div>
+              </div>
+            </div>
+          )}
+
+          {recentSignals.length > 0 && (
+            <div className="signals-table-wrap">
+              <table className="signals-table">
+                <thead>
+                  <tr>
+                    <th>Ticker</th><th>Signal</th><th>Direction</th><th>Impact</th><th>Confidence</th><th>Event</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentSignals.map((s, i) => (
+                    <tr key={i}>
+                      <td className="ticker-cell">{s.ticker}</td>
+                      <td><span className={`signal-badge signal-${s.signal?.toLowerCase()}`}>{s.signal}</span></td>
+                      <td>{s.direction}</td>
+                      <td>{s.impact_range}</td>
+                      <td>{s.confidence}%</td>
+                      <td className="event-cell">{s.event_headline}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
+      )}
     </div>
   )
 }
