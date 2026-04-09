@@ -91,3 +91,43 @@
   font-size: 11px;
   color: var(--text-muted);
 }
+
+@media (max-width: 768px) {
+  .news-toolbar {
+    flex-wrap: wrap;
+  }
+
+  .news-toolbar select {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .news-stats {
+    flex-wrap: wrap;
+  }
+
+  .news-stat {
+    flex: 1;
+    min-width: 70px;
+  }
+
+  .news-card {
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .news-card-meta {
+    gap: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .news-card {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .news-card .badge {
+    align-self: flex-start;
+  }
+}

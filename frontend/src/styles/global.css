@@ -227,6 +227,53 @@ tr:hover td {
 }
 
 @media (max-width: 768px) {
-  .main-content { margin-left: 0; padding: 16px; }
+  .main-content {
+    margin-left: 0;
+    padding: 16px;
+    padding-top: 56px;
+  }
+
   .grid-3, .grid-2 { grid-template-columns: 1fr; }
+  .grid-5, .grid-4 { grid-template-columns: repeat(2, 1fr); }
+
+  .page-title {
+    font-size: 20px;
+    margin-bottom: 16px;
+  }
+
+  .card {
+    padding: 16px;
+  }
+
+  table {
+    font-size: 13px;
+  }
+
+  th, td {
+    padding: 10px 12px;
+  }
+
+  .pagination {
+    flex-wrap: wrap;
+  }
+
+  select {
+    font-size: 13px;
+    padding: 8px 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-content {
+    padding: 12px;
+    padding-top: 52px;
+  }
+
+  .grid-5, .grid-4, .grid-3, .grid-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .page-title {
+    font-size: 18px;
+  }
 }

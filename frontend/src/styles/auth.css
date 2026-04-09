@@ -187,3 +187,20 @@
 .auth-card {
   animation: fadeIn 0.4s ease-out;
 }
+
+@media (max-width: 480px) {
+  .auth-card {
+    margin: 0 16px;
+    padding: 40px 24px 36px;
+  }
+
+  .auth-logo {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+  }
+
+  .auth-card h1 {
+    font-size: 22px;
+  }
+}
