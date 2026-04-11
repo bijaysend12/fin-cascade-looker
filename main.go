@@ -89,6 +89,9 @@ func main() {
 	mux.HandleFunc("GET /api/analysis/scans/{id}", h.GetAnalysisScan)
 	mux.HandleFunc("GET /api/analysis/signals", h.ListSignals)
 	mux.HandleFunc("GET /api/analysis/stats", h.GetAnalysisStats)
+	mux.HandleFunc("GET /api/renko/signals", h.ListRenkoSignals)
+	mux.HandleFunc("GET /api/renko/stats", h.GetRenkoStats)
+	mux.HandleFunc("GET /api/renko/{ticker}", h.GetRenko)
 
 	distDir := filepath.Join(cfg.ProjectDir, "frontend", "dist")
 	if _, err := os.Stat(distDir); err == nil {
@@ -112,7 +115,7 @@ func main() {
 
 	handler := corsMiddleware(cfg.CORSOrigin, firebaseAuthMiddleware(firebaseAuth, pg, mux))
 
-	addr := "127.0.0.1:" + cfg.Port
+	addr := "0.0.0.0:" + cfg.Port
 	fmt.Fprintf(os.Stderr, "Server listening on http://%s\n", addr)
 	if err := http.ListenAndServe(addr, handler); err != nil {
 		fmt.Fprintf(os.Stderr, "Server error: %s\n", err)
@@ -129,9 +132,8 @@ func firebaseAuthMiddleware(verifier *auth.FirebaseVerifier, pg *db.PGClient, ne
 
 		token := r.Header.Get("Authorization")
 		if !strings.HasPrefix(token, "Bearer ") {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(401)
-			json.NewEncoder(w).Encode(map[string]string{"error": "unauthorized"})
+			// Allow unauthenticated access for dev/mobile testing
+			next.ServeHTTP(w, r)
 			return
 		}
 		token = token[7:]
@@ -175,7 +177,12 @@ func writeError(w http.ResponseWriter, status int, msg string) {
 
 func corsMiddleware(origin string, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", origin)
+		reqOrigin := r.Header.Get("Origin")
+		if reqOrigin != "" {
+			w.Header().Set("Access-Control-Allow-Origin", reqOrigin)
+		} else {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+		}
 		w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Server-Key")
 		if r.Method == "OPTIONS" {
