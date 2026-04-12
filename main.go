@@ -92,6 +92,7 @@ func main() {
 	mux.HandleFunc("GET /api/renko/signals", h.ListRenkoSignals)
 	mux.HandleFunc("GET /api/renko/stats", h.GetRenkoStats)
 	mux.HandleFunc("GET /api/renko/{ticker}", h.GetRenko)
+	mux.HandleFunc("GET /api/sync", h.Sync)
 
 	distDir := filepath.Join(cfg.ProjectDir, "frontend", "dist")
 	if _, err := os.Stat(distDir); err == nil {
