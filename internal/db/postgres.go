@@ -39,18 +39,28 @@ func (c *PGClient) Close() {
 	c.DB.Close()
 }
 
-func (c *PGClient) UpsertUser(firebaseUID, email, name, avatarURL string) (*User, error) {
+func (c *PGClient) GetUserByUID(uid string) (*User, error) {
 	var u User
 	err := c.DB.QueryRow(`
-		INSERT INTO users (firebase_uid, email, name, avatar_url, last_login)
-		VALUES ($1, $2, $3, $4, NOW())
+		SELECT id, firebase_uid, email, COALESCE(name,''), COALESCE(avatar_url,''), is_admin, created_at, last_login
+		FROM users WHERE firebase_uid = $1
+	`, uid).Scan(
+		&u.ID, &u.FirebaseUID, &u.Email, &u.Name, &u.AvatarURL, &u.IsAdmin, &u.CreatedAt, &u.LastLogin,
+	)
+	return &u, err
+}
+
+func (c *PGClient) RegisterUser(userID, name, email, authType string) (*User, error) {
+	var u User
+	err := c.DB.QueryRow(`
+		INSERT INTO users (firebase_uid, email, name, last_login)
+		VALUES ($1, $2, $3, NOW())
 		ON CONFLICT (firebase_uid) DO UPDATE SET
 			email = EXCLUDED.email,
 			name = EXCLUDED.name,
-			avatar_url = EXCLUDED.avatar_url,
 			last_login = NOW()
 		RETURNING id, firebase_uid, email, COALESCE(name,''), COALESCE(avatar_url,''), is_admin, created_at, last_login
-	`, firebaseUID, email, name, avatarURL).Scan(
+	`, userID, email, name).Scan(
 		&u.ID, &u.FirebaseUID, &u.Email, &u.Name, &u.AvatarURL, &u.IsAdmin, &u.CreatedAt, &u.LastLogin,
 	)
 	return &u, err

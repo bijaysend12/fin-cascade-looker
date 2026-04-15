@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -266,11 +267,17 @@ func (h *Handler) syncNewsArticles(since string) []map[string]any {
 		return []map[string]any{}
 	}
 
+	// SQLite processed_at uses space separator ("2026-04-13 22:41:14"),
+	// but since param is RFC3339 with T separator. Normalize for correct comparison.
+	sqliteSince := strings.Replace(since, "T", " ", 1)
+	if idx := strings.Index(sqliteSince, "Z"); idx != -1 {
+		sqliteSince = sqliteSince[:idx]
+	}
 	rows, err := h.SQLite.DB.Query(`
 		SELECT hash, title, link, source, classification, event_type, processed_at, notified
 		FROM articles WHERE processed_at >= ?
 		ORDER BY processed_at DESC
-	`, since)
+	`, sqliteSince)
 	if err != nil {
 		return []map[string]any{}
 	}
@@ -282,10 +289,15 @@ func (h *Handler) syncNewsArticles(since string) []map[string]any {
 		var title, link, source, cls, eventT, processedAt *string
 		var notified int
 		rows.Scan(&hash, &title, &link, &source, &cls, &eventT, &processedAt, &notified)
+		// Append Z to processed_at so clients parse it as UTC (SQLite stores without timezone)
+		pa := deref(processedAt)
+		if pa != "" && !strings.HasSuffix(pa, "Z") && !strings.Contains(pa, "+") {
+			pa = strings.Replace(pa, " ", "T", 1) + "Z"
+		}
 		articles = append(articles, map[string]any{
 			"hash": hash, "title": deref(title), "url": deref(link), "source": deref(source),
 			"classification": deref(cls), "event_type": deref(eventT),
-			"processed_at": deref(processedAt), "notified": notified,
+			"processed_at": pa, "notified": notified,
 		})
 	}
 	if articles == nil {

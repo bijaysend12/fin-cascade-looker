@@ -48,7 +48,7 @@ export default function Dashboard() {
 
       <div className="dashboard-grid">
         <div className="card">
-          <h3 style={{ marginBottom: 16, fontSize: 15, color: 'var(--text-secondary)' }}>Companies by Sector</h3>
+          <h3 style={{ marginBottom: 16, fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1.2px', fontWeight: 600 }}>Companies by Sector</h3>
           <div className="sector-bars">
             {sectors.map(s => (
               <div key={s.name} className="sector-bar-row">
@@ -64,14 +64,14 @@ export default function Dashboard() {
         </div>
 
         <div className="card">
-          <h3 style={{ marginBottom: 16, fontSize: 15, color: 'var(--text-secondary)' }}>Relationships</h3>
+          <h3 style={{ marginBottom: 16, fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1.2px', fontWeight: 600 }}>Relationships</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <RelStat label="COMPETES_WITH" value={stats.relationships?.competes || 0} color="var(--danger)" />
             <RelStat label="SUPPLIES_TO" value={stats.relationships?.supplies || 0} color="var(--accent)" />
             <RelStat label="CONSUMES" value={stats.relationships?.consumes || 0} color="var(--warning)" />
           </div>
 
-          <h3 style={{ marginBottom: 12, marginTop: 24, fontSize: 15, color: 'var(--text-secondary)' }}>News Summary</h3>
+          <h3 style={{ marginBottom: 12, marginTop: 24, fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1.2px', fontWeight: 600 }}>News Summary</h3>
           <div style={{ display: 'flex', gap: 12 }}>
             <MiniStat label="Total" value={stats.news?.total || 0} />
             <MiniStat label="HIGH" value={stats.news?.high || 0} color="var(--danger)" />
@@ -81,7 +81,7 @@ export default function Dashboard() {
 
           {recentNews.length > 0 && (
             <>
-              <h3 style={{ marginBottom: 10, marginTop: 24, fontSize: 15, color: 'var(--text-secondary)' }}>Recent Articles</h3>
+              <h3 style={{ marginBottom: 10, marginTop: 24, fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1.2px', fontWeight: 600 }}>Recent Articles</h3>
               <div className="recent-articles">
                 {recentNews.map(a => (
                   <div key={a.hash} className="recent-article">
@@ -158,18 +158,18 @@ export default function Dashboard() {
 
 function RelStat({ label, value, color }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: 'var(--bg-hover)', borderRadius: 'var(--radius-sm)' }}>
-      <span style={{ fontSize: 13, color: 'var(--text-muted)', fontFamily: 'monospace' }}>{label}</span>
-      <span style={{ fontSize: 18, fontWeight: 700, color }}>{value}</span>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: 'linear-gradient(145deg, var(--card-gradient-start), var(--card-gradient-end))', borderRadius: 'var(--radius)', border: '1px solid var(--border)' }}>
+      <span style={{ fontSize: 13, color: 'var(--text-muted)', fontFamily: 'monospace', letterSpacing: '0.3px' }}>{label}</span>
+      <span style={{ fontSize: 18, fontWeight: 700, color, letterSpacing: '-0.3px' }}>{value}</span>
     </div>
   )
 }
 
 function MiniStat({ label, value, color }) {
   return (
-    <div style={{ flex: 1, textAlign: 'center', padding: '10px', background: 'var(--bg-hover)', borderRadius: 'var(--radius-sm)' }}>
-      <div style={{ fontSize: 20, fontWeight: 700, color: color || 'var(--text-primary)' }}>{value}</div>
-      <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{label}</div>
+    <div style={{ flex: 1, textAlign: 'center', padding: '12px 10px', background: 'linear-gradient(145deg, var(--card-gradient-start), var(--card-gradient-end))', borderRadius: 'var(--radius)', border: '1px solid var(--border)' }}>
+      <div style={{ fontSize: 20, fontWeight: 700, color: color || 'var(--text-primary)', letterSpacing: '-0.3px' }}>{value}</div>
+      <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1.0px', marginTop: 4 }}>{label}</div>
     </div>
   )
 }

@@ -4,7 +4,7 @@
   position: fixed;
   left: 0;
   top: 0;
-  background: var(--bg-secondary);
+  background: linear-gradient(180deg, var(--bg-secondary), #0e0e16);
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
@@ -18,18 +18,21 @@
 }
 
 .sidebar-header h1 {
-  font-size: 18px;
-  font-weight: 700;
+  font-size: 20px;
+  font-weight: 800;
   background: linear-gradient(135deg, var(--accent) 0%, var(--accent-secondary) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  letter-spacing: -0.3px;
 }
 
 .sidebar-header p {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--text-muted);
-  margin-top: 2px;
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
 }
 
 .sidebar-close-btn {
@@ -57,25 +60,40 @@
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
-  border-radius: var(--radius-sm);
-  color: var(--text-secondary);
+  border-radius: var(--radius);
+  color: var(--text-muted);
   font-size: 14px;
   font-weight: 500;
   transition: var(--transition);
+  position: relative;
 }
 
 .sidebar-nav a:hover {
-  background: var(--bg-hover);
+  background: rgba(255, 255, 255, 0.04);
   color: var(--text-primary);
 }
 
 .sidebar-nav a.active {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
-  color: var(--accent-light);
+  background: linear-gradient(135deg, rgba(124, 127, 255, 0.18) 0%, rgba(139, 92, 246, 0.12) 100%);
+  color: #fff;
+  border-left: 3px solid var(--accent);
+  padding-left: 13px;
+  box-shadow: 0 0 20px rgba(124, 127, 255, 0.08);
 }
 
 .sidebar-nav a.active svg {
   color: var(--accent-light);
+  filter: drop-shadow(0 0 4px rgba(124, 127, 255, 0.4));
+}
+
+.nav-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-muted);
+  padding: 8px 16px 4px;
+  opacity: 0.6;
 }
 
 .sidebar-footer {
@@ -84,12 +102,28 @@
 }
 
 .sidebar-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   padding: 8px 16px;
   font-size: 12px;
   color: var(--text-muted);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.sidebar-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+  box-shadow: 0 0 12px rgba(124, 127, 255, 0.3);
 }
 
 .logout-btn {

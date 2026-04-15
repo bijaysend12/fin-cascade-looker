@@ -35,7 +35,7 @@ export default function NewsFeed() {
 
   return (
     <div>
-      <h1 className="page-title">News Feed</h1>
+      <h1 className="page-title">News</h1>
 
       {newsStats && (
         <div className="news-stats">
@@ -58,13 +58,16 @@ export default function NewsFeed() {
         </div>
       )}
 
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+        {['', 'HIGH', 'MEDIUM', 'LOW'].map(c => (
+          <button key={c} className={`signal-filter ${classification === c ? 'active' : ''}`}
+            onClick={() => { setClassification(c); setPage(0) }}>
+            {c || 'All'}
+          </button>
+        ))}
+      </div>
+
       <div className="news-toolbar">
-        <select value={classification} onChange={e => { setClassification(e.target.value); setPage(0) }}>
-          <option value="">All Classifications</option>
-          <option value="HIGH">HIGH</option>
-          <option value="MEDIUM">MEDIUM</option>
-          <option value="LOW">LOW</option>
-        </select>
         <select value={eventType} onChange={e => { setEventType(e.target.value); setPage(0) }}>
           <option value="">All Event Types</option>
           {EVENT_TYPES.filter(Boolean).map(t => (
@@ -77,7 +80,7 @@ export default function NewsFeed() {
       {loading ? <div className="loading">Loading...</div> : (
         <div className="news-list">
           {articles.map(a => (
-            <div key={a.hash} className="news-card">
+            <div key={a.hash} className="news-card" data-classification={a.classification}>
               <span className={`badge badge-${(a.classification || 'low').toLowerCase()}`}>
                 {a.classification || '?'}
               </span>

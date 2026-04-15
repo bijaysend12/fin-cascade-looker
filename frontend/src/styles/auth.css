@@ -35,7 +35,7 @@
   position: absolute;
   width: 600px;
   height: 600px;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.08) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(124, 127, 255, 0.08) 0%, transparent 70%);
   top: -200px;
   right: -100px;
   pointer-events: none;
@@ -62,7 +62,7 @@
   max-width: 420px;
   width: 100%;
   backdrop-filter: blur(20px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(99, 102, 241, 0.05);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(124, 127, 255, 0.05);
 }
 
 .auth-logo {
@@ -74,7 +74,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 20px rgba(124, 127, 255, 0.3);
 }
 
 .auth-logo svg {

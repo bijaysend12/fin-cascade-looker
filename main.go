@@ -20,16 +20,10 @@ import (
 func main() {
 	cfg := config.Load()
 
-	var allowedEmails []string
-	if cfg.AllowedEmails != "" {
-		allowedEmails = strings.Split(cfg.AllowedEmails, ",")
+	if cfg.JWTSecret == "" {
+		fmt.Fprintf(os.Stderr, "WARNING: JWT_SECRET not set, token signing will fail\n")
 	}
-	firebaseAuth := auth.NewFirebaseVerifier(cfg.FirebaseProjectID, allowedEmails)
-	if len(allowedEmails) > 0 {
-		fmt.Fprintf(os.Stderr, "Firebase auth enabled, allowed emails: %s\n", cfg.AllowedEmails)
-	} else {
-		fmt.Fprintf(os.Stderr, "Firebase auth enabled (all authenticated users allowed)\n")
-	}
+	auth.InitJWT(cfg.JWTSecret)
 
 	neo4j, err := db.NewNeo4jClient(cfg.Neo4jURI, cfg.Neo4jUser, cfg.Neo4jPassword)
 	if err != nil {
@@ -80,6 +74,7 @@ func main() {
 	mux.HandleFunc("GET /api/stats", h.GetStats)
 	mux.HandleFunc("GET /api/companies", h.ListCompanies)
 	mux.HandleFunc("GET /api/companies/{ticker}", h.GetCompany)
+	mux.HandleFunc("GET /api/companies/{ticker}/fundamentals", h.GetCompanyFundamentals)
 	mux.HandleFunc("GET /api/companies/{ticker}/graph", h.GetCompanyGraph)
 	mux.HandleFunc("GET /api/sectors", h.ListSectors)
 	mux.HandleFunc("GET /api/news", h.ListNews)
@@ -93,6 +88,62 @@ func main() {
 	mux.HandleFunc("GET /api/renko/stats", h.GetRenkoStats)
 	mux.HandleFunc("GET /api/renko/{ticker}", h.GetRenko)
 	mux.HandleFunc("GET /api/sync", h.Sync)
+
+	mux.HandleFunc("POST /api/user/register", func(w http.ResponseWriter, r *http.Request) {
+		var body struct {
+			UserID   string `json:"user_id"`
+			Name     string `json:"name"`
+			Email    string `json:"email"`
+			AuthType string `json:"auth_type"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			writeError(w, 400, "invalid request body")
+			return
+		}
+		if body.UserID == "" {
+			writeError(w, 400, "user_id is required")
+			return
+		}
+
+		var user *db.User
+		if pg != nil {
+			var err error
+			user, err = pg.RegisterUser(body.UserID, body.Name, body.Email, body.AuthType)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "register user failed for %s: %s\n", body.UserID, err)
+				writeError(w, 500, "registration failed")
+				return
+			}
+		}
+
+		cid := 0
+		isAdmin := false
+		name := body.Name
+		email := body.Email
+		if user != nil {
+			cid = user.ID
+			isAdmin = user.IsAdmin
+			name = user.Name
+			email = user.Email
+		}
+
+		token, err := auth.GenerateToken(body.UserID, cid)
+		if err != nil {
+			writeError(w, 500, "token generation failed")
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]any{
+			"id":        cid,
+			"user_id":   body.UserID,
+			"name":      name,
+			"email":     email,
+			"auth_type": body.AuthType,
+			"is_admin":  isAdmin,
+			"token":     token,
+		})
+	})
 
 	distDir := filepath.Join(cfg.ProjectDir, "frontend", "dist")
 	if _, err := os.Stat(distDir); err == nil {
@@ -114,9 +165,9 @@ func main() {
 		})
 	}
 
-	handler := corsMiddleware(cfg.CORSOrigin, firebaseAuthMiddleware(firebaseAuth, pg, mux))
+	handler := corsMiddleware(cfg.CORSOrigin, authMiddleware(cfg.ServerKey, pg, mux))
 
-	addr := "0.0.0.0:" + cfg.Port
+	addr := "127.0.0.1:" + cfg.Port
 	fmt.Fprintf(os.Stderr, "Server listening on http://%s\n", addr)
 	if err := http.ListenAndServe(addr, handler); err != nil {
 		fmt.Fprintf(os.Stderr, "Server error: %s\n", err)
@@ -124,38 +175,40 @@ func main() {
 	}
 }
 
-func firebaseAuthMiddleware(verifier *auth.FirebaseVerifier, pg *db.PGClient, next http.Handler) http.Handler {
+func authMiddleware(serverKey string, pg *db.PGClient, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !strings.HasPrefix(r.URL.Path, "/api/") {
 			next.ServeHTTP(w, r)
 			return
 		}
 
-		token := r.Header.Get("Authorization")
-		if !strings.HasPrefix(token, "Bearer ") {
-			// Allow unauthenticated access for dev/mobile testing
+		// Require server key for all API requests
+		key := r.Header.Get("X-Server-Key")
+		if key == "" || key != serverKey {
+			writeError(w, 401, "invalid or missing server key")
+			return
+		}
+
+		// Register is the only endpoint that doesn't require JWT
+		if r.URL.Path == "/api/user/register" {
 			next.ServeHTTP(w, r)
 			return
 		}
-		token = token[7:]
 
-		claims, err := verifier.VerifyToken(token)
-		if err != nil {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(401)
-			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		// All other endpoints require JWT
+		jwtToken := r.Header.Get("X-Auth-Token")
+		if jwtToken == "" {
+			writeError(w, 401, "missing auth token")
 			return
 		}
-
+		claims, err := auth.VerifyJWT(jwtToken)
+		if err != nil {
+			writeError(w, 401, "invalid or expired token")
+			return
+		}
 		if pg != nil {
-			name := claims.Name
-			if name == "" {
-				name = claims.Email
-			}
-			user, err := pg.UpsertUser(claims.Subject, claims.Email, name, claims.Picture)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "user upsert failed for %s: %s\n", claims.Email, err)
-			} else {
+			user, err := pg.GetUserByUID(claims.UserID)
+			if err == nil {
 				ctx := context.WithValue(r.Context(), handlers.UserContextKey, user)
 				r = r.WithContext(ctx)
 			}
@@ -184,8 +237,8 @@ func corsMiddleware(origin string, next http.Handler) http.Handler {
 		} else {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
 		}
-		w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Server-Key")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Server-Key, X-Auth-Token")
 		if r.Method == "OPTIONS" {
 			w.WriteHeader(204)
 			return

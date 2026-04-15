@@ -141,6 +141,47 @@ func (h *Handler) GetCompany(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, result)
 }
 
+func (h *Handler) GetCompanyFundamentals(w http.ResponseWriter, r *http.Request) {
+	ticker := r.PathValue("ticker")
+	if ticker == "" {
+		writeError(w, 400, "ticker required")
+		return
+	}
+
+	rows, err := h.Neo4j.Query(
+		`MATCH (c:Company {ticker: $ticker})
+		RETURN c.ticker as ticker, c.name as name,
+		c.pe as pe, c.pb as pb, c.ev_to_ebitda as ev_to_ebitda,
+		c.enterprise_value as enterprise_value, c.market_cap as market_cap,
+		c.dividend_yield as dividend_yield,
+		c.fifty_two_week_high as fifty_two_week_high, c.fifty_two_week_low as fifty_two_week_low,
+		c.roce as roce, c.roe as roe,
+		c.op_margin as op_margin, c.profit_margin as profit_margin,
+		c.gross_margin as gross_margin, c.ebitda_margin as ebitda_margin,
+		c.debt_to_equity as debt_to_equity, c.total_debt as total_debt,
+		c.total_cash as total_cash, c.free_cashflow as free_cashflow,
+		c.borrowings as borrowings, c.operating_cashflow as operating_cashflow,
+		c.sales_growth_3yr as sales_growth_3yr, c.sales_growth_5yr as sales_growth_5yr,
+		c.profit_growth_3yr as profit_growth_3yr, c.profit_growth_5yr as profit_growth_5yr,
+		c.promoter_pct as promoter_pct, c.fii_pct as fii_pct,
+		c.dii_pct as dii_pct, c.public_pct as public_pct,
+		c.analyst_rec as analyst_rec, c.target_price as target_price,
+		c.analyst_count as analyst_count, c.beta as beta,
+		c.annual_revenue as annual_revenue, c.annual_profit as annual_profit,
+		c.enriched_at as enriched_at, c.enrichment_source as enrichment_source`,
+		map[string]any{"ticker": ticker})
+	if err != nil {
+		writeError(w, 500, "internal error")
+		return
+	}
+	if len(rows) == 0 {
+		writeError(w, 404, fmt.Sprintf("company %s not found", ticker))
+		return
+	}
+
+	writeJSON(w, rows[0])
+}
+
 func (h *Handler) GetCompanyGraph(w http.ResponseWriter, r *http.Request) {
 	if !isAdmin(r) {
 		writeError(w, 403, "admin access required")

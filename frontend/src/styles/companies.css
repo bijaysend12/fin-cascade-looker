@@ -10,10 +10,11 @@
 }
 
 .companies-table-wrap {
-  background: var(--bg-card);
+  background: linear-gradient(145deg, var(--card-gradient-start), var(--card-gradient-end));
   border: 1px solid var(--border);
   border-radius: var(--radius);
   overflow: hidden;
+  box-shadow: var(--shadow);
 }
 
 .companies-table-wrap tr {

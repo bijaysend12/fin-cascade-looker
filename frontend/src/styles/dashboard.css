@@ -5,6 +5,49 @@
   margin-bottom: 24px;
 }
 
+.stats-card {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(145deg, var(--card-gradient-start), var(--card-gradient-end));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  transition: all 0.25s ease;
+}
+
+.stats-card:hover {
+  border-color: var(--border-light);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5);
+}
+
+.stats-card-value {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -1px;
+  line-height: 1.1;
+}
+
+.stats-card-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  font-weight: 600;
+}
+
+.stats-card-glow {
+  position: absolute;
+  bottom: -20px;
+  right: -20px;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  filter: blur(25px);
+  pointer-events: none;
+}
+
 .sector-bars {
   display: flex;
   flex-direction: column;
@@ -28,15 +71,16 @@
 .sector-bar-track {
   flex: 1;
   height: 24px;
-  background: var(--bg-hover);
-  border-radius: 4px;
+  background: var(--bg-primary);
+  border-radius: 6px;
   overflow: hidden;
+  border: 1px solid var(--border);
 }
 
 .sector-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--accent) 0%, var(--accent-secondary) 100%);
-  border-radius: 4px;
+  background: linear-gradient(90deg, rgba(124, 127, 255, 0.6), var(--accent));
+  border-radius: 6px;
   transition: width 0.5s ease;
   display: flex;
   align-items: center;
@@ -65,8 +109,14 @@
   align-items: center;
   justify-content: space-between;
   padding: 10px 14px;
-  background: var(--bg-hover);
+  background: linear-gradient(145deg, var(--card-gradient-start), var(--card-gradient-end));
   border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  transition: var(--transition);
+}
+
+.recent-article:hover {
+  border-color: var(--border-light);
 }
 
 .recent-article-title {

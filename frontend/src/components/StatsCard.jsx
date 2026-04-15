@@ -1,8 +1,12 @@
 export default function StatsCard({ label, value, color }) {
+  const c = color || 'var(--accent)'
   return (
-    <div className="card" style={{ borderLeft: `3px solid ${color || 'var(--accent)'}` }}>
-      <div style={{ fontSize: 28, fontWeight: 700, color: color || 'var(--text-primary)' }}>{value}</div>
-      <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4 }}>{label}</div>
+    <div className="stats-card" style={{
+      borderLeft: `3px solid ${c}`,
+    }}>
+      <div className="stats-card-value" style={{ color: c }}>{value}</div>
+      <div className="stats-card-label">{label}</div>
+      <div className="stats-card-glow" style={{ background: c, opacity: 0.06 }} />
     </div>
   )
 }

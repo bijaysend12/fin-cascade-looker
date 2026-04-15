@@ -14,11 +14,13 @@
 .company-header .ticker {
   font-family: monospace;
   font-size: 14px;
-  padding: 4px 10px;
-  background: rgba(99, 102, 241, 0.15);
+  padding: 4px 12px;
+  background: linear-gradient(135deg, rgba(124, 127, 255, 0.20), rgba(139, 92, 246, 0.10));
   color: var(--accent-light);
   border-radius: 6px;
   font-weight: 600;
+  border: 1px solid rgba(124, 127, 255, 0.3);
+  letter-spacing: 0.5px;
 }
 
 .company-tabs {
@@ -59,16 +61,18 @@
 
 .info-item {
   padding: 14px;
-  background: var(--bg-hover);
-  border-radius: var(--radius-sm);
+  background: linear-gradient(145deg, var(--card-gradient-start), var(--card-gradient-end));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
 }
 
 .info-item-label {
   font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1.0px;
   color: var(--text-muted);
   margin-bottom: 4px;
+  font-weight: 600;
 }
 
 .info-item-value {
@@ -94,16 +98,18 @@
 
 .relation-card {
   padding: 14px;
-  background: var(--bg-hover);
+  background: linear-gradient(145deg, var(--card-gradient-start), var(--card-gradient-end));
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius);
   cursor: pointer;
   transition: var(--transition);
+  box-shadow: var(--shadow);
 }
 
 .relation-card:hover {
   border-color: var(--accent);
-  background: var(--bg-card);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
 }
 
 .relation-card-ticker {
@@ -130,10 +136,11 @@
 }
 
 .supply-section h4 {
-  font-size: 13px;
+  font-size: 11px;
   color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1.2px;
+  font-weight: 600;
   margin-bottom: 12px;
   padding-bottom: 8px;
   border-bottom: 1px solid var(--border);
@@ -166,8 +173,8 @@
   font-weight: 600;
 }
 
-.imported-yes { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
-.imported-no { background: rgba(34, 197, 94, 0.15); color: var(--success); }
+.imported-yes { background: linear-gradient(135deg, rgba(248, 113, 113, 0.20), rgba(248, 113, 113, 0.08)); color: var(--danger); border: 1px solid rgba(248, 113, 113, 0.3); }
+.imported-no { background: linear-gradient(135deg, rgba(52, 211, 153, 0.20), rgba(52, 211, 153, 0.08)); color: var(--success); border: 1px solid rgba(52, 211, 153, 0.3); }
 
 .back-link {
   display: inline-flex;
