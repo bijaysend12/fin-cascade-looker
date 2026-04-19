@@ -144,16 +144,17 @@ func (h *Handler) GetAnalysisScan(w http.ResponseWriter, r *http.Request) {
 			event["signals"] = signals
 
 			var analysis map[string]any
-			var directImpact, beneficiaries, demandFlow, supplyChain, sectorRipple, timeline *string
+			var directImpact, beneficiaries, demandFlow, supplyChain, sectorRipple, timeline, historicalPattern *string
 			err := h.PG.DB.QueryRow(`
-				SELECT direct_impact, beneficiaries, demand_flow, supply_chain, sector_ripple, timeline
+				SELECT direct_impact, beneficiaries, demand_flow, supply_chain, sector_ripple, timeline, historical_pattern
 				FROM cascade_analysis WHERE event_id = $1
-			`, eid).Scan(&directImpact, &beneficiaries, &demandFlow, &supplyChain, &sectorRipple, &timeline)
+			`, eid).Scan(&directImpact, &beneficiaries, &demandFlow, &supplyChain, &sectorRipple, &timeline, &historicalPattern)
 			if err == nil {
 				analysis = map[string]any{
 					"direct_impact": parseJSON(directImpact), "beneficiaries": parseJSON(beneficiaries),
 					"demand_flow": parseJSON(demandFlow), "supply_chain": parseJSON(supplyChain),
 					"sector_ripple": parseJSON(sectorRipple), "timeline": parseJSON(timeline),
+					"historical_pattern": parseJSON(historicalPattern),
 				}
 			}
 			event["analysis"] = analysis

@@ -88,6 +88,9 @@ func main() {
 	mux.HandleFunc("GET /api/renko/stats", h.GetRenkoStats)
 	mux.HandleFunc("GET /api/renko/{ticker}", h.GetRenko)
 	mux.HandleFunc("GET /api/sync", h.Sync)
+	mux.HandleFunc("GET /api/static_sync", h.StaticSync)
+	mux.HandleFunc("GET /api/companies/{ticker}/static", h.GetCompanyStatic)
+	mux.HandleFunc("GET /api/companies/{ticker}/forensic", h.GetCompanyForensic)
 
 	mux.HandleFunc("POST /api/user/register", func(w http.ResponseWriter, r *http.Request) {
 		var body struct {
@@ -167,7 +170,7 @@ func main() {
 
 	handler := corsMiddleware(cfg.CORSOrigin, authMiddleware(cfg.ServerKey, pg, mux))
 
-	addr := "127.0.0.1:" + cfg.Port
+	addr := ":" + cfg.Port
 	fmt.Fprintf(os.Stderr, "Server listening on http://%s\n", addr)
 	if err := http.ListenAndServe(addr, handler); err != nil {
 		fmt.Fprintf(os.Stderr, "Server error: %s\n", err)
